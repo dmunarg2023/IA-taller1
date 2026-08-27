@@ -105,37 +105,20 @@ def uniformCostSearch(problem: SearchProblem):
 
     return None
 
-
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """
-    A*: combina el costo real acumulado con una heuristica.
-    Es la version mas avanzada y funcional dentro del taller.
+    Search the node that has the lowest combined cost and heuristic first.
     """
-    start = problem.getStartState()
-    priorityQueue = []
-    heapq.heappush(priorityQueue, (heuristic(start, problem), 0, start))
-    cameFrom = {}
-    bestCost = {start: 0}
+    # TODO: Add your code here
+    utils.raiseNotDefined()
 
-    while priorityQueue:
-        _, currentCost, state = heapq.heappop(priorityQueue)
 
-        if currentCost > bestCost.get(state, float("inf")):
-            continue
 
-        if problem.isGoalState(state):
-            return _reconstructPath(cameFrom, state)
-
-        for successor, action, stepCost in problem.getSuccessors(state):
-            newCost = currentCost + stepCost
-            if newCost < bestCost.get(successor, float("inf")):
-                bestCost[successor] = newCost
-                cameFrom[successor] = (state, action)
-                priority = newCost + heuristic(successor, problem)
-                heapq.heappush(priorityQueue, (priority, newCost, successor))
-
-    return None
-
+# Abbreviations (you can use them for the -f option in main.py)
+bfs = breadthFirstSearch
+dfs = depthFirstSearch
+astar = aStarSearch
+ucs = uniformCostSearch
 
 # =====================================================
 # VERSION MEJORADA CON AYUDA DE IA (COMENTADA)
@@ -228,38 +211,5 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
 #     return None
 #
 #
-# def aStarSearch(problem, heuristic=nullHeuristic):
-#     start = problem.getStartState()
-#     frontier = [(heuristic(start, problem), 0, start)]
-#     cameFrom = {}
-#     costs = {start: 0}
-#
-#     while frontier:
-#         _, currentCost, state = heapq.heappop(frontier)
-#
-#         if currentCost > costs.get(state, float("inf")):
-#             continue
-#
-#         if problem.isGoalState(state):
-#             return reconstructPath(cameFrom, state)
-#
-#         for nextState, action, stepCost in problem.getSuccessors(state):
-#             tentativeCost = costs[state] + stepCost
-#
-#             if tentativeCost < costs.get(nextState, float("inf")):
-#                 costs[nextState] = tentativeCost
-#                 cameFrom[nextState] = (state, action)
-#
-#                 priority = tentativeCost + heuristic(nextState, problem)
-#                 heapq.heappush(frontier, (priority, tentativeCost, nextState))
-#
-#     return None
-#
 # =====================================================
 
-
-# Abbreviations (you can use them for the -f option in main.py)
-bfs = breadthFirstSearch
-dfs = depthFirstSearch
-astar = aStarSearch
-ucs = uniformCostSearch
