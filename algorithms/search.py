@@ -110,7 +110,29 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     Search the node that has the lowest combined cost and heuristic first.
     """
     # TODO: Add your code here
-    utils.raiseNotDefined()
+    start_state = problem.getStartState()
+    pq = []
+    heapq.heappush(pq, (heuristic(start_state, problem), 0, start_state, []))
+    explored = set()
+    # f(n) = g(n) + h(n), los g forman el costo real acumulado desde el estado in al estado fi (g_cost, currentg..), los h(heuristic) es la estimacion que hace la heuristica y f(n) es la propridad total de la formula de A*
+    while pq:
+        _, current_g, current_state, current_path = heapq.heappop(pq)
+
+        if current_state in explored:
+            continue
+        
+        if problem.isGoalState(current_state):
+            return current_path
+
+        explored.add(current_state)
+
+        for next_state, move, cost in problem.getSuccessors(current_state):
+            if next_state not in explored:
+                accumulated_g = current_g + cost
+                total_f = accumulated_g + heuristic(next_state, problem)
+                heapq.heappush(pq, (total_f, accumulated_g, next_state, current_path + [move]))
+                
+    return []
 
 
 
@@ -209,7 +231,39 @@ ucs = uniformCostSearch
 #                 heapq.heappush(frontier, (tentativeCost, nextState))
 #
 #     return None
+#     
+# def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
+#     """
+#     Search the node that has the lowest combined cost and heuristic first.
+#     f(n) = g(n) + h(n)
+#     """
+#     start_state = problem.getStartState()
+#     counter = itertools.count()  # desempate estable, evita comparar estados
+#     pq = []
+#     heapq.heappush(pq, (heuristic(start_state, problem), 0, next(counter), start_state, []))
+#     explored = set()
 #
+#     while pq:
+#         _, current_g, _, current_state, current_path = heapq.heappop(pq)
+#
+#         if current_state in explored:
+#             continue
+#
+#         if problem.isGoalState(current_state):
+#             return current_path
+#
+#         explored.add(current_state)
+#
+#         for next_state, move, cost in problem.getSuccessors(current_state):
+#             if next_state not in explored:
+#                 accumulated_g = current_g + cost
+#                 total_f = accumulated_g + heuristic(next_state, problem)
+#                 heapq.heappush(
+#                     pq,
+#                     (total_f, accumulated_g, next(counter), next_state, current_path + [move])
+#                 )
+#
+#     return []
 #
 # =====================================================
 
