@@ -89,7 +89,82 @@ def systemRepairHeuristic(
     - Balance heuristic strength vs. computation time (do experiments!)
     """
     # TODO: Add your code here
-    utils.raiseNotDefined()
+    
+    # primero revisamos si estamos en un estado meta
+    if state[0] == problem.controlPosition and len(state[2]) == 0:
+        return 0
+    
+    estimado = 0
+    
+    """
+    Vamos a usar MST como heuristica entonces: 
+        - Vamos a hacer una matriz con las distancias de cada punto a los demas
+        - Luego haremos un ciclo donde buscamos el costo mas pequeno que conecte
+          los nodos y sumamos todos los costos
+    """
+    
+    #pongamos todos los puntos en una lista
+    
+    # puntosAVisitar es una lista de tuplas que indican la posicion de todos
+    # los elementos que tenemos que visitar.
+    # comienza con la posicion actual del robot
+    puntosAVisitar = [] 
+    # si no tenemos el kit debemos buscarlo primero.
+    if state[1] == False: 
+        estimado += abs(state[0][0]-problem.kitPosition[0]) + abs(state[0][1]-problem.kitPosition[1])
+        puntosAVisitar.append(problem.kitPosition)
+    else:
+        puntosAVisitar.append(state[0])
+    
+    # ahora agregamops las posiciones de todos los T.
+    for posicion in state[2]:
+        puntosAVisitar.append(posicion)
+    
+    # finalmente tenemos que agregar el destino final, el centro de control.
+    puntosAVisitar.append(problem.controlPosition)
+        
+    tamano = len(puntosAVisitar)
+    
+    #Creamos un arreglo donde tendremos las distancias de cada nodo a todos los 
+    #demas.
+    matriz = [[0]*tamano for i in range(tamano)]
+    
+    for fila in range(tamano):
+        for columna in range(tamano):
+            if fila == columna:
+                matriz[fila][columna] = 0
+            else:
+                puntoFila=puntosAVisitar[fila]
+                puntoColumna=puntosAVisitar[columna]
+                distanciaManhattan = abs(puntoFila[0]-puntoColumna[0]) + abs(puntoFila[1]-puntoColumna[1])
+                matriz[fila][columna] = distanciaManhattan
+    
+    # ahora vamos a buscar el camino mas barato
+    
+    # crearemos dos listas para saber cuales nodos ya estan conectados
+    conectados = [puntosAVisitar[0]]
+    pendientes = puntosAVisitar.copy()[1:]
+    
+    #vamos a buscar todas las conexiones entre nodos con los caminos mas cortos
+    while len(pendientes)>0:
+        minimo = 100000
+        posMin = 10000
+        
+        for nodoConectado in conectados:
+            indice = puntosAVisitar.index(nodoConectado)
+            costos = matriz[indice]
+            for nodo in pendientes:
+                pos = puntosAVisitar.index(nodo)
+                if costos[pos]<minimo:
+                    minimo = costos[pos]
+                    posMin = pos
+        
+        estimado += minimo
+        conectados.append(puntosAVisitar[posMin])
+        pendientes.remove(puntosAVisitar[posMin])
+        
+    
+    return estimado
 
 
 
@@ -151,3 +226,163 @@ def systemRepairHeuristic(
 #
 #     return euclidean(position, problem.controlPosition)
 # =====================================================
+
+# =====================================================
+# VERSION MEJORADA CON AYUDA DE IA (COMENTADA)
+# =====================================================
+
+# A continuacion se deja la version refactorizada sugerida
+# por la IA para systemRepairHeuristic:
+#
+# 1) Utiliza un Minimum Spanning Tree (MST) para estimar
+#    el costo minimo necesario para conectar todos los
+#    puntos que todavia deben ser visitados.
+#
+# 2) Utiliza distancia Manhattan entre los puntos, ya que
+#    esta representa una cota inferior del costo real de
+#    desplazamiento en los mapas.
+#
+# 3) Si el robot todavia no tiene el kit, primero se agrega
+#    la distancia entre la posicion actual y K. El MST
+#    comienza desde K porque el robot debe recoger el kit
+#    antes de reparar los sistemas.
+#
+# 4) Si el robot ya tiene el kit, el MST comienza desde la
+#    posicion actual.
+#
+# 5) Se utiliza el algoritmo de Prim para construir el MST.
+#    En lugar de mantener listas de nodos conectados y
+#    pendientes, se utilizan arreglos de indices para
+#    reducir busquedas innecesarias.
+#
+# 6) La heuristica retorna 0 cuando el estado ya es un
+#    estado meta.
+#
+#
+# def systemRepairHeuristic(
+#     state: Tuple[Tuple, bool, Tuple],
+#     problem: SystemRepairProblem
+# ):
+#     """
+#     Heuristica para SystemRepairProblem.
+#
+#     Utiliza distancia Manhattan y un Minimum Spanning Tree
+#     para estimar el costo restante de la mision.
+#     """
+#
+#     position, hasKit, pendingSystems = state
+#
+#     # Si el robot ya reparo todos los sistemas y llego
+#     # al centro de control, no queda ningun costo.
+#     if position == problem.controlPosition and not pendingSystems:
+#         return 0
+#
+#     estimado = 0
+#
+#     # -------------------------------------------------
+#     # Construccion de los puntos que deben ser visitados
+#     # -------------------------------------------------
+#
+#     puntosAVisitar = []
+#
+#     # Si todavia no tenemos el kit, primero debemos
+#     # desplazarnos hasta K.
+#     if not hasKit:
+#
+#         distanciaKit = (
+#             abs(position[0] - problem.kitPosition[0])
+#             + abs(position[1] - problem.kitPosition[1])
+#         )
+#
+#         estimado += distanciaKit
+#
+#         # El MST comienza desde el kit.
+#         puntosAVisitar.append(problem.kitPosition)
+#
+#     else:
+#
+#         # Si ya tenemos el kit, el MST comienza desde
+#         # la posicion actual.
+#         puntosAVisitar.append(position)
+#
+#     # Agregamos todos los sistemas que todavia estan
+#     # pendientes de reparacion.
+#     for system in pendingSystems:
+#         puntosAVisitar.append(system)
+#
+#     # El robot debe terminar en el centro de control.
+#     puntosAVisitar.append(problem.controlPosition)
+#
+#     tamano = len(puntosAVisitar)
+#
+#     # -------------------------------------------------
+#     # Construccion de la matriz de distancias
+#     # -------------------------------------------------
+#
+#     matriz = [[0] * tamano for _ in range(tamano)]
+#
+#     for fila in range(tamano):
+#
+#         for columna in range(tamano):
+#
+#             puntoFila = puntosAVisitar[fila]
+#             puntoColumna = puntosAVisitar[columna]
+#
+#             matriz[fila][columna] = (
+#                 abs(puntoFila[0] - puntoColumna[0])
+#                 + abs(puntoFila[1] - puntoColumna[1])
+#             )
+#
+#     # -------------------------------------------------
+#     # Construccion del MST utilizando Prim
+#     # -------------------------------------------------
+#
+#     # distancias[i] representa el costo minimo conocido
+#     # para conectar el nodo i al MST.
+#     distancias = [float("inf")] * tamano
+#
+#     # El primer nodo comienza conectado.
+#     distancias[0] = 0
+#
+#     # Indica si cada nodo ya pertenece al MST.
+#     conectados = [False] * tamano
+#
+#     costoMST = 0
+#
+#     for _ in range(tamano):
+#
+#         minimo = float("inf")
+#         nodoMin = -1
+#
+#         # Buscamos el nodo no conectado cuya conexion
+#         # al MST sea la mas barata.
+#         for i in range(tamano):
+#
+#             if not conectados[i] and distancias[i] < minimo:
+#
+#                 minimo = distancias[i]
+#                 nodoMin = i
+#
+#         # Agregamos el nodo seleccionado al MST.
+#         conectados[nodoMin] = True
+#         costoMST += minimo
+#
+#         # Actualizamos las distancias de los nodos que
+#         # todavia no pertenecen al MST.
+#         for i in range(tamano):
+#
+#             if (
+#                 not conectados[i]
+#                 and matriz[nodoMin][i] < distancias[i]
+#             ):
+#
+#                 distancias[i] = matriz[nodoMin][i]
+#
+#     # Sumamos el costo del MST al costo necesario para
+#     # llegar al kit, si este todavia no habia sido recogido.
+#     estimado += costoMST
+#
+#     return estimado
+#
+# =====================================================
+
